@@ -47,8 +47,8 @@ export function sortByPosition(data,flag) {
   
   let result = data.sort((prev,next) => {
     if(flag === true) {
-      if (prev.startPoints[0]?.distanceToUser < next.startPoints[0]?.distanceToUser) return -1;
-      if (prev.startPoints[0]?.distanceToUser > next.startPoints[0]?.distanceToUser) return 1;
+      if (prev.startPoints[0]?.distanceToUser > next.startPoints[0]?.distanceToUser) return -1;
+      if (prev.startPoints[0]?.distanceToUser < next.startPoints[0]?.distanceToUser) return 1;
       return 0;
     } else {
       if (prev.startPoints[0]?.distanceToUser < next.startPoints[0]?.distanceToUser) return -1;

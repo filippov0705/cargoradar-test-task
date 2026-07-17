@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Text, View, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, RefreshControl, StatusBar } from 'react-native';
+import { Text, View, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, RefreshControl, StatusBar, ScrollView } from 'react-native';
 
 //packages
 // import auth from '@react-native-firebase/auth';
@@ -38,6 +38,9 @@ import { get } from '../store/features/api/user-api';
 import { getMarkerCoords, sortDocuments } from '../util/SearchScreen/helpersdriversearch';
 import { filterDocuments, moveObjectToStartById, sortTender } from '../util/SearchScreen/helpersdriverfilter';
 import InfoAskWindow from '../components/Modal/InfoAskWindow';
+import {TendersBottomSheet} from '../components/TendersBottomSheet';
+import {MOCK_TENDERS} from '../mockData/mockTenders';
+import {transportTypes} from '../util/helperConst';
 
 export const SearchScreen = ({navigation}) => {
   console.log('\x1b[44m%s %s\x1b[0m', 'SearchScreen', );
@@ -91,6 +94,7 @@ export const SearchScreen = ({navigation}) => {
   const [currentSort, setCurrentSort] = useState('position');
   const [notifDotArr, setNotifDotArr] = useState([]);
   const [topStyle, setTopStyle] = useState(0);
+  const [transportFilter, setTransportFilter] = useState(null);
   // console.log('topStyle:', topStyle)
   // console.log('123', dataTender.length)
   // console.log('isVisibleMap', isVisibleMap)
@@ -223,6 +227,17 @@ export const SearchScreen = ({navigation}) => {
     if (!response.success) {
       console.warn('Ошибка запроса:', response.error);
       //
+
+      // Mocked data
+      const sorted = sortDocuments(
+        MOCK_TENDERS.map(t => ({...t, startPoints: t.startPoints.map(p => ({...p}))})),
+        currentPosition,
+      );
+      setDataTender(sorted);
+      setCoordinates(getMarkerCoords(sorted));
+      setCurrentFlag(true);
+      setCurrentSort('position');
+
       alert(response.error);
       setisLoading(false)
       setRefreshing(false);
@@ -707,6 +722,10 @@ export const SearchScreen = ({navigation}) => {
   },[isActiveTab,dataTenderActive,userFormsHiddenTenders,isVisibleMap,userFormsActivities])
 
 
+  const visibleTenders = (
+    objDataFiltering !== null && filteredDataTender.length > 0 ? filteredDataTender : dataTender
+  ).filter(t => transportFilter === null || t.transportType === transportFilter);
+
   if(firstOpen === false) {
     return (
       <View style={[mainstyles.alCjcC,{flex: 1,height:height+safeInsets.top,minHeight: height+safeInsets.top, paddingTop: safeInsets.top, backgroundColor: 'rgba(0,0,0,0.5)'}]}>
@@ -716,7 +735,7 @@ export const SearchScreen = ({navigation}) => {
   } else {
 
     return (
-      <View style={[styles.container,]}>
+      <View style={[styles.container, isVisibleMap && {paddingBottom: 0}]}>
         <StatusBar translucent barStyle={'dark-content'}/>
         {
           isLoading ? 
@@ -734,32 +753,40 @@ export const SearchScreen = ({navigation}) => {
           :
           null
         } 
-        <View style={[styles.wrapper,{ backgroundColor: 'transparent' }]}>
+        <View style={[styles.wrapper,{ flex: 1, position: 'relative', backgroundColor: 'transparent' }]}>
           {
             isVisibleMap ?
             <>
               {
                 isActiveTab === 0 && dataTenderActive.length === 0 ?
-                <ClasteringMap 
-                  coordinatesArr={coordinates} 
-                  isFiltered={objDataFiltering} 
-                  regionState={region} 
-                  setRegionState={setRegion} 
-                  topPosition={safeInsets.top}
-                  onPressCallout={handlePressCallOut}
-                />
+                <View style={{position: 'absolute', top: 0, left: 0, right: 0, bottom: 0}}>
+                  <ClasteringMap 
+                    customStyles={{flex: 1}}
+                    cusStMap={{flex: 1, height: '100%', minHeight: undefined}}
+                    coordinatesArr={coordinates} 
+                    isFiltered={objDataFiltering} 
+                    regionState={region} 
+                    setRegionState={setRegion} 
+                    topPosition={safeInsets.top}
+                    onPressCallout={handlePressCallOut}
+                  />
+                </View>
                 : 
                 <>
                   {
                     isActiveTab === 1 && dataTenderActive.length > 0 ?
-                    <ClasteringMap 
-                      coordinatesArr={coordinates} 
-                      isFiltered={objDataFiltering} 
-                      regionState={region} 
-                      setRegionState={setRegion} 
-                      topPosition={safeInsets.top}
-                      onPressCallout={handlePressCallOut}
-                    />
+                    <View style={{position: 'absolute', top: 0, left: 0, right: 0, bottom: 0}}>
+                      <ClasteringMap 
+                        customStyles={{flex: 1}}
+                        cusStMap={{flex: 1, height: '100%', minHeight: undefined}}
+                        coordinatesArr={coordinates} 
+                        isFiltered={objDataFiltering} 
+                        regionState={region} 
+                        setRegionState={setRegion} 
+                        topPosition={safeInsets.top}
+                        onPressCallout={handlePressCallOut}
+                      />
+                    </View>
                     : null
                     // <>
                     // {
@@ -777,11 +804,32 @@ export const SearchScreen = ({navigation}) => {
             : null
           } 
           {/* <View style={{paddingTop: !isVisibleMap ? safeInsets?.top : 0}}> */}
-          <View style={{
-            paddingTop: topStyle,
-            // backgroundColor: 'orange'
-            }}>
+          <TendersBottomSheet enabled={isVisibleMap}>
+          <View style={{flex: 1, position: 'relative', backgroundColor: 'transparent'}}>
+          <View style={{backgroundColor: '#fff', paddingTop: !isVisibleMap ? safeInsets.top : 0}}>
             <TopTabBarSearch isActive={isActiveTab} onPress={handleOnPressTopTab} isChangeTitle={dataTenderActive.length} customStyles={{}} renderAction={notifDotArr}/>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              style={{flexGrow: 0}}
+              contentContainerStyle={{paddingHorizontal: 8, paddingVertical: 8}}>
+              {transportTypes.map(type => (
+                <TouchableOpacity
+                  key={type}
+                  onPress={() => setTransportFilter(prev => (prev === type ? null : type))}
+                  style={{
+                    paddingHorizontal: 12,
+                    paddingVertical: 6,
+                    marginRight: 8,
+                    borderRadius: 16,
+                    backgroundColor: transportFilter === type ? THEME.PRIMARY : THEME.GREY100,
+                  }}>
+                  <Text style={[mainstyles.text14R, {color: transportFilter === type ? '#fff' : THEME.GREY700}]}>
+                    {type}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
           </View>
           {
             dataTenderActive?.length === 0 &&  isActiveTab === 0 || 
@@ -797,7 +845,6 @@ export const SearchScreen = ({navigation}) => {
             </View>
             : null
           }
-          <View style={{position: 'relative', paddingBottom: 95+safeInsets?.bottom,backgroundColor: 'transparent'}}>
             {
               isShowList?
                 <SortingComponentModal 
@@ -814,8 +861,8 @@ export const SearchScreen = ({navigation}) => {
                   {
                     dataTenderActive?.length === 0 ? 
                     <FlatList
-                      style={[{backgroundColor: 'transparent',},isVisibleMap ? {height: height/2-140,paddingBottom: safeInsets?.bottom}: null]}                    
-                      data={objDataFiltering!==null && filteredDataTender.length>0? filteredDataTender : dataTender}
+                      style={{flex: 1, backgroundColor: 'transparent'}}                    
+                      data={visibleTenders}
                       ListHeaderComponent={()=>(
                         <>
                         {
@@ -886,8 +933,8 @@ export const SearchScreen = ({navigation}) => {
                 />
                   : 
                   <FlatList
-                  style={[{backgroundColor: 'transparent'},isVisibleMap ? {height: height/2-140, }: null]}
-                  data={objDataFiltering!==null && filteredDataTender.length>0? filteredDataTender : dataTender}
+                  style={{flex: 1, backgroundColor: 'transparent'}}
+                  data={visibleTenders}
                   ListHeaderComponent={()=>(
                     <>
                     {
@@ -952,6 +999,7 @@ export const SearchScreen = ({navigation}) => {
               :null
             } */}
           </View>
+          </TendersBottomSheet>
         </View>      
       </View>
     )

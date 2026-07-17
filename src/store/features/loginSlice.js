@@ -2,11 +2,16 @@ import { createSlice } from '@reduxjs/toolkit'
 
 const initialState = {
   isAuth: false,
-  isLogin: false,
+  isLogin: true,
   isDisable: false,
   disabledMsg: '',
-  role: null,
-  userProfileInfo: null,
+  role: 'driver',
+  userProfileInfo: {
+    id: '1',
+    role: 'driver',
+    name: 'Test user',
+    phone: '+1234567890',
+  },
   userFormsInfo: null,
   driverFavoritsTenders: [],
   driverDeleteTenders: [],

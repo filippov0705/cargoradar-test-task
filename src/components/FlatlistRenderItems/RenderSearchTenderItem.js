@@ -3,6 +3,7 @@ import { TouchableOpacity, Text, View, Image, StyleSheet, Dimensions } from 'rea
 import { renderItemsStyles } from '../../../styles/renderItemsStyles';
 import { THEME, mainstyles } from '../../theme';
 import { AddressPointsView } from '../AddressPointsView';
+import { statusLabels } from '../../util/helperConst';
 
 export const RenderSearchTenderItem = (props) => {
 
@@ -32,6 +33,13 @@ export const RenderSearchTenderItem = (props) => {
             <Text style={[mainstyles.text16M,{color: THEME.GREY900}]}>{itemTender?.price} руб.</Text>
           </View>
         </View>
+        <Text style={[mainstyles.text14R,{color: THEME.GREY700,paddingBottom: 5}]}>{itemTender?.transportType}</Text>
+        {
+          itemTender?.status ?
+          <Text style={[mainstyles.text14R,{color: THEME.GREY700,paddingBottom: 5}]}>{statusLabels[itemTender.status] ?? itemTender.status}</Text>
+          :
+          null
+        }
         <View style={[{}]} >
           <AddressPointsView disable={true} type={'start'} data={itemTender.startPoints} length={itemTender.startPoints.length} onPress={()=>{}}/>
           <AddressPointsView disable={true} type={'end'} data={itemTender.endPoints} length={itemTender.endPoints.length} onPress={()=>{}}/>
@@ -40,7 +48,15 @@ export const RenderSearchTenderItem = (props) => {
           <View style={[renderItemsStyles.buttonDatail, mainstyles.rowalCjcC]} >
           <Text style={[mainstyles.text14R]}>{earliestDate}-{latestDate}</Text>
           </View>
-          <Text style={[mainstyles.text16M]}>{itemTender.route.distance} км</Text>
+          <View style={{alignItems: 'flex-end'}}>
+            {
+              itemTender.startPoints?.[0]?.distanceToUser != null ?
+              <Text style={[mainstyles.text14R,{color: THEME.GREY700}]}>до загрузки {itemTender.startPoints[0].distanceToUser.toFixed(1)} км</Text>
+              :
+              null
+            }
+            <Text style={[mainstyles.text16M]}>маршрут {itemTender.route.distance} км</Text>
+          </View>
         </View>
       </View>     
     </TouchableOpacity>      

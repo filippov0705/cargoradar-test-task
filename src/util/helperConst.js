@@ -489,3 +489,18 @@ export const notifSettings = {
       "registered": "0"
     }
   ]
+
+  export const transportTypes = [
+    'Тент',
+    'Рефрижератор',
+    'Изотерм',
+    'Бортовой',
+    'Контейнер',
+    'Самосвал',
+  ];
+  
+  export const statusLabels = {
+    publish: 'Опубликована',
+    in_work: 'В работе',
+  };
+  
